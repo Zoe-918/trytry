@@ -2,8 +2,9 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>114義消尾牙 - 座位導覽圖</title>
+    <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
     <style>
         /* --- 全局設定 --- */
         :root {
@@ -23,12 +24,13 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            touch-action: none; /* 禁止瀏覽器預設的縮放行為，交給腳本處理 */
         }
 
         /* --- 頂部搜尋列 --- */
         .header {
             background: white;
-            padding: 15px 20px;
+            padding: 10px 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             z-index: 100;
             display: flex;
@@ -37,7 +39,7 @@
             flex-shrink: 0;
         }
 
-        h1 { margin: 0 0 10px 0; color: #333; font-size: 1.5rem; }
+        h1 { margin: 0 0 8px 0; color: #333; font-size: 1.2rem; }
 
         .search-container {
             position: relative;
@@ -49,7 +51,7 @@
 
         input {
             width: 100%;
-            padding: 12px 20px;
+            padding: 10px 20px;
             border: 2px solid #ddd;
             border-radius: 50px;
             font-size: 16px;
@@ -61,24 +63,24 @@
         /* --- 地圖區域 (核心佈局) --- */
         .map-wrapper {
             flex-grow: 1;
-            overflow: auto; /* 允許地圖捲動 */
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            /* 背景網格裝飾 */
-            background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
+            position: relative;
+            overflow: hidden; /* 隱藏溢出，讓 Panzoom 處理 */
+            background-color: #cbd5e0;
+            background-image: radial-gradient(#fff 1px, transparent 1px);
             background-size: 20px 20px;
+            cursor: grab;
         }
+        .map-wrapper:active { cursor: grabbing; }
 
         .map-content {
-            position: relative;
-            width: 1200px; /* 地圖固定寬度，確保不跑版 */
-            min-height: 800px;
+            /* 這裡不設固定寬高，由內容撐開，Panzoom 會操作這個元素 */
+            display: inline-block;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-            padding: 20px;
-            box-sizing: border-box;
+            box-shadow: 0 0 50px rgba(0,0,0,0.1);
+            padding: 40px;
+            margin: 100px; /* 預留邊界 */
+            transform-origin: center center; /* 從中心縮放 */
         }
 
         /* 舞台 */
@@ -92,24 +94,24 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0 auto 30px auto;
+            margin: 0 auto 50px auto;
             border-radius: 0 0 20px 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
-        /* 佈局容器：使用 Flexbox 模擬圖片的三大區塊 */
+        /* 佈局容器 */
         .layout-row {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 60px;
         }
 
         /* 左側區塊 */
         .group-left {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 兩排 */
-            gap: 20px;
-            width: 250px;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            width: 260px;
         }
 
         /* 中間星光大道區塊 */
@@ -117,51 +119,51 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 160px;
+            width: 200px;
         }
 
         /* 星光大道文字 */
         .aisle-text {
             writing-mode: vertical-rl;
-            font-size: 30px;
+            font-size: 40px;
             color: #ccc;
-            letter-spacing: 20px;
+            letter-spacing: 30px;
             font-weight: bold;
-            margin: 50px 0;
-            border-left: 2px dashed #ddd;
-            border-right: 2px dashed #ddd;
-            padding: 0 20px;
-            height: 400px;
+            margin: 60px 0;
+            border-left: 3px dashed #eee;
+            border-right: 3px dashed #eee;
+            padding: 0 30px;
+            height: 500px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* 右側區塊 (含最右邊的複雜區) */
+        /* 右側區塊 */
         .group-right {
             display: flex;
-            gap: 30px;
+            gap: 40px;
         }
         
         .col-right-inner {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 兩排 */
-            gap: 20px;
-            width: 250px;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            width: 260px;
         }
 
         .col-right-far {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr; /* 最右邊三排 */
-            gap: 15px;
-            width: 380px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            width: 400px;
             align-content: start;
         }
 
         /* --- 桌子樣式 --- */
         .table {
-            width: 90px;
-            height: 90px;
+            width: 100px;
+            height: 100px;
             background: var(--table-green);
             color: white;
             border-radius: 50%;
@@ -170,29 +172,28 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-            transition: transform 0.2s;
-            position: relative;
-            border: 3px solid white;
+            cursor: pointer; /* 在手機上即使是拖曳，點擊還是有效 */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 4px solid white;
             line-height: 1.2;
             padding: 5px;
+            user-select: none; /* 防止拖曳時選取文字 */
         }
-        .table:hover { transform: scale(1.1); z-index: 10; }
-        .table span { font-size: 12px; font-weight: normal; opacity: 0.9; }
+        
+        .table span { font-size: 13px; font-weight: normal; opacity: 0.9; }
 
         /* 特殊桌顏色 */
-        .t-main { background: var(--table-main); width: 110px; height: 110px; font-size: 18px; z-index: 5; } /* 主桌大一點 */
+        .t-main { background: var(--table-main); width: 130px; height: 130px; font-size: 20px; z-index: 5; }
         .t-vip { background: var(--table-vip); }
         .t-blue { background: var(--table-blue); }
 
         /* 搜尋亮起特效 */
         .highlight {
             background-color: var(--primary-red) !important;
-            box-shadow: 0 0 0 5px #ffcdd2, 0 0 30px var(--primary-red);
-            transform: scale(1.15);
+            box-shadow: 0 0 0 8px #ffcdd2, 0 0 50px var(--primary-red);
+            transform: scale(1.2);
             animation: blink 1s infinite alternate;
             z-index: 20;
         }
@@ -201,44 +202,77 @@
         /* --- 彈出視窗 --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             z-index: 200;
             display: none;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(2px);
         }
         .modal {
             background: white;
             width: 90%;
-            max-width: 400px;
+            max-width: 380px;
             border-radius: 15px;
             padding: 20px;
-            max-height: 80vh;
+            max-height: 70vh;
             overflow-y: auto;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; margin-bottom: 15px;
         }
-        .modal-title { font-size: 1.5rem; color: var(--primary-red); font-weight: bold; }
-        .close-btn { font-size: 24px; cursor: pointer; background: none; border: none; color: #888; }
-        .list-item { padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 16px; }
-        .list-item b { color: #333; }
-        .match-name { color: white; background: var(--primary-red); padding: 2px 5px; border-radius: 4px; }
-
-        /* 底部入口 */
+        .modal-title { font-size: 1.6rem; color: var(--primary-red); font-weight: 800; }
+        .close-btn { font-size: 28px; cursor: pointer; background: none; border: none; color: #999; padding: 0 10px;}
+        .list-item { padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 17px; display: flex; align-items: center; }
+        .list-item:before { content: '👤'; margin-right: 10px; font-size: 14px;}
+        
+        /* 底部入口與控制項 */
         .entrance {
             position: absolute;
-            bottom: 20px;
+            bottom: -60px;
             left: 50%;
             transform: translateX(-50%);
-            border: 2px solid #333;
-            padding: 10px 30px;
-            font-weight: bold;
+            border: 3px solid #333;
+            padding: 15px 40px;
+            font-weight: 900;
+            font-size: 20px;
             color: #333;
             background: #fff;
+            letter-spacing: 5px;
         }
+
+        /* 縮放控制按鈕 */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 90;
+        }
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #555;
+            transition: 0.2s;
+        }
+        .control-btn:active { transform: scale(0.9); background: #eee; }
+
     </style>
 </head>
 <body>
@@ -250,17 +284,19 @@
         </div>
     </div>
 
-    <div class="map-wrapper">
-        <div class="map-content">
+    <div class="map-wrapper" id="mapWrapper">
+        <div class="map-content" id="mapContent">
+            
             <div class="stage">舞 台 (STAGE)</div>
 
             <div class="layout-row">
-                
                 <div class="group-left">
                     <div class="table t-vip" data-label="親友桌 14">親友<br>14</div>
                     <div class="table t-vip" data-label="親友桌 15">親友<br>15</div>
-                    <div class="table t-green" data-label="第四大隊 17-25">大肚<br>守望</div> <div class="table t-vip" data-label="四大港桌 12">貴賓<br>12</div>
-                    <div class="table t-blue" data-label="中龍分隊 39">中龍<br>39</div> <div class="table t-blue" data-label="中龍分隊 40">中龍<br>40</div>
+                    <div class="table t-green" data-label="第四大隊 17-25">大肚<br>守望</div>
+                    <div class="table t-vip" data-label="四大港桌 12">貴賓<br>12</div>
+                    <div class="table t-blue" data-label="中龍分隊 39">中龍<br>39</div>
+                    <div class="table t-blue" data-label="中龍分隊 40">中龍<br>40</div>
 
                     <div class="table t-vip" data-label="貴賓桌 3">貴賓<br>3</div>
                     <div class="table t-vip" data-label="貴賓桌 6">貴賓<br>6</div>
@@ -270,7 +306,7 @@
                 </div>
 
                 <div class="group-center">
-                    <div style="display:flex; gap:20px; margin-bottom: 20px;">
+                    <div style="display:flex; gap:30px; margin-bottom: 20px;">
                         <div class="table t-main" data-label="主桌1">主桌<br>1</div>
                         <div class="table t-main" data-label="主桌2 (議員)">主桌<br>2</div>
                     </div>
@@ -278,14 +314,15 @@
                 </div>
 
                 <div class="group-right">
-                    
                     <div class="col-right-inner">
                         <div class="table t-vip" data-label="貴賓桌4 (風電)">貴賓<br>4</div>
                         <div class="table t-vip" data-label="顧問桌 7">顧問<br>7</div>
                         <div class="table t-vip" data-label="顧問桌 10">顧問<br>10</div>
                         <div class="table t-blue" data-label="第一中隊 26-27">一中隊<br>26</div>
                         <div class="table t-blue" data-label="第一分隊 29-30">第一<br>30</div>
-                        <div class="table t-blue" data-label="第一分隊 29-30">第一<br>31</div> <div class="table t-vip" data-label="副團長桌5">副團長<br>5</div>
+                        <div class="table t-blue" data-label="第一分隊 29-30">第一<br>31</div>
+
+                        <div class="table t-vip" data-label="副團長桌5">副團長<br>5</div>
                         <div class="table t-vip" data-label="顧問桌 8">顧問<br>8</div>
                         <div class="table t-vip" data-label="貴賓桌11">港警<br>11</div>
                         <div class="table t-blue" data-label="第一中隊 26-27">一中隊<br>27</div>
@@ -311,16 +348,22 @@
                         <div class="table t-green" data-label="第四大隊 17-25">梧棲</div>
 
                         <div class="table t-blue" data-label="西碼頭分隊 38">西碼頭<br>38</div>
-                        <div class="table t-blue" data-label="中龍分隊 39">西碼頭<br>39</div> <div class="table t-green" data-label="第四大隊 17-25">海爆</div>
+                        <div class="table t-blue" data-label="中龍分隊 39">西碼頭<br>39</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">海爆</div>
 
                         <div class="table t-blue" data-label="西碼頭分隊 35">防風林<br>35</div>
-                        <div class="table t-blue" data-label="中龍分隊 39">童綜合</div> <div class="table t-blue" data-label="中龍分隊 39">光田</div>
+                        <div class="table t-blue" data-label="中龍分隊 39">童綜合</div>
+                        <div class="table t-blue" data-label="中龍分隊 39">光田</div>
                     </div>
                 </div>
             </div>
 
             <div class="entrance">入 口</div>
         </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" id="btnReset" title="回正">⟲</button>
     </div>
 
     <div class="modal-overlay" id="modal">
@@ -335,7 +378,7 @@
 
     <script>
         // ==========================================
-        // 📋 114 義消尾牙完整資料 (已對應圖片邏輯)
+        // 📋 114 義消尾牙完整資料
         // ==========================================
         const rawData = [
             { "n": "林謙志", "s": "主桌1" }, { "n": "駱啟明", "s": "主桌1" }, { "n": "孫福佑", "s": "主桌1" }, { "n": "陳高尚", "s": "主桌1" }, { "n": "林志宏", "s": "主桌1" }, { "n": "吳瓊華", "s": "主桌1" }, { "n": "孫文山", "s": "主桌1" }, { "n": "王俊傑", "s": "主桌1" }, { "n": "魏福添", "s": "主桌1" }, { "n": "張家豪", "s": "主桌1" }, { "n": "李文義", "s": "主桌1" }, { "n": "游永中", "s": "主桌1" },
@@ -364,25 +407,31 @@
             { "n": "中龍分隊", "s": "中龍分隊 39" }, { "n": "中龍分隊", "s": "中龍分隊 40" }
         ];
 
-        // 整理資料：將人名歸類到桌號
+        // 整理資料庫
         const tableMap = {};
         rawData.forEach(p => {
-            const key = p.s.split('(')[0].trim(); // 簡化Key，例如 "主桌1 (xx)" -> "主桌1"
+            const key = p.s.split('(')[0].trim();
             if(!tableMap[key]) tableMap[key] = [];
             tableMap[key].push(p.n);
         });
 
-        // 綁定點擊事件
+        // 綁定點擊事件 (支援拖曳時不觸發點擊)
+        let isDragging = false;
+        
         document.querySelectorAll('.table').forEach(el => {
+            el.addEventListener('mousedown', () => isDragging = false);
+            el.addEventListener('mousemove', () => isDragging = true);
+            el.addEventListener('touchstart', () => isDragging = false);
+            el.addEventListener('touchmove', () => isDragging = true);
+
             el.addEventListener('click', function() {
-                const label = this.getAttribute('data-label');
-                // 模糊匹配：因為data-label和實際資料可能有些微差距
-                let targetKey = Object.keys(tableMap).find(k => label.includes(k) || k.includes(label.split(' ')[0]));
+                if (isDragging) return; // 如果在拖曳地圖，不觸發點擊
                 
-                // 特殊處理：第四大隊全部顯示
+                const label = this.getAttribute('data-label');
+                let targetKey = Object.keys(tableMap).find(k => label.includes(k) || k.includes(label.split(' ')[0]));
                 if (label.includes("第四大隊")) targetKey = "第四大隊 17-25";
                 
-                showModal(label, tableMap[targetKey] || ["目前無詳細名單"]);
+                showModal(label, tableMap[targetKey] || ["無詳細名單"]);
             });
         });
 
@@ -397,54 +446,73 @@
             modal.style.display = 'flex';
         }
 
-        function closeModal() {
-            modal.style.display = 'none';
-        }
+        function closeModal() { modal.style.display = 'none'; }
+        modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
 
-        // 點擊背景關閉
-        modal.addEventListener('click', (e) => {
-            if(e.target === modal) closeModal();
+        // ==========================================
+        // 🚀 Panzoom 縮放設定
+        // ==========================================
+        const mapElement = document.getElementById('mapContent');
+        const panzoom = Panzoom(mapElement, {
+            maxScale: 3,
+            minScale: 0.3,
+            contain: 'outside',
+            startScale: 0.8
         });
 
-        // 搜尋功能
+        // 啟用滑鼠滾輪縮放
+        mapElement.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
+
+        // 重置按鈕
+        document.getElementById('btnReset').addEventListener('click', () => {
+            panzoom.reset();
+        });
+
+        // ==========================================
+        // 🔍 搜尋與自動定位功能
+        // ==========================================
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const val = e.target.value.trim();
             const tables = document.querySelectorAll('.table');
             
-            // 清除亮起
             tables.forEach(t => t.classList.remove('highlight'));
 
             if(!val) return;
 
-            // 尋找符合的人名
-            let foundTables = new Set();
+            let foundTable = null;
             
-            // 1. 搜人名
-            rawData.forEach(p => {
+            // 搜尋邏輯
+            rawData.some(p => {
                 if(p.n.includes(val)) {
-                   // 反查這個人在哪桌，然後找對應的HTML元素
                    const key = p.s.split('(')[0].trim();
                    tables.forEach(t => {
-                       if(t.getAttribute('data-label').includes(key)) {
-                           foundTables.add(t);
+                       if(t.getAttribute('data-label').includes(key) && !foundTable) {
+                           foundTable = t;
                        }
                    });
+                   return true; // 找到就停止
                 }
             });
 
-            // 2. 搜桌名 (例如搜"主桌")
-            tables.forEach(t => {
-                if(t.innerText.includes(val)) foundTables.add(t);
-            });
-
-            // 亮起
-            if(foundTables.size > 0) {
-                foundTables.forEach(t => t.classList.add('highlight'));
-                // 捲動到第一個結果
-                const first = [...foundTables][0];
-                first.scrollIntoView({behavior: "smooth", block: "center"});
+            // 如果找到，亮起並移動地圖
+            if(foundTable) {
+                foundTable.classList.add('highlight');
+                
+                // 計算位移量，將目標移到畫面中心
+                const rect = foundTable.getBoundingClientRect();
+                const containerRect = document.getElementById('mapWrapper').getBoundingClientRect();
+                
+                // 讓 Panzoom 對焦該元素 (簡化版邏輯：放大並移動)
+                panzoom.zoom(1.5, { animate: true });
+                setTimeout(() => {
+                    panzoom.pan(
+                        (containerRect.width / 2) - foundTable.offsetLeft - (foundTable.offsetWidth / 2) - 100, // 100是修正margin
+                        (containerRect.height / 2) - foundTable.offsetTop - (foundTable.offsetHeight / 2) - 100
+                    );
+                }, 100);
             }
         });
+
     </script>
 </body>
 </html>
