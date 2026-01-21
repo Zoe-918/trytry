@@ -69,7 +69,7 @@
             justify-content: center;
             align-items: flex-start; 
             padding: 40px;
-            cursor: grab;
+            cursor: grab; /* 手形游標 */
         }
 
         .map-viewport:active { cursor: grabbing; }
@@ -78,6 +78,8 @@
             transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             transform-origin: top center;
             padding-bottom: 100px;
+            /* 確保即使沒桌子也有高度，避免跑版 */
+            min-height: 800px; 
         }
 
         .stage {
@@ -100,6 +102,8 @@
         .seating-chart {
             display: grid;
             grid-template-columns: 80px 80px var(--aisle-width) 80px 80px var(--aisle-width) 80px 80px 80px;
+            /* 明確定義行高，防止沒內容時塌陷 */
+            grid-auto-rows: 90px;
             gap: 15px;
             justify-content: center;
         }
@@ -134,7 +138,7 @@
 
         /* --- 搜尋特效 --- */
         .table.dimmed {
-            opacity: 0.15;
+            opacity: 0.3; /* 調整為 0.3，避免完全看不見 */
             filter: grayscale(100%);
             transform: scale(0.9);
         }
@@ -281,13 +285,16 @@
     </div>
 
     <script>
-        // ==========================================
-        // 資料庫
-        // ==========================================
-        const tablesData = [
-            // Row 1
-            { id: '15', name: '親友桌', type: 't-guest', r: 1, c: 1, guests: ['大隊長夫人','岳父','岳母','孫媽媽','淑君老師*4','緻瑋*3'] },
-            { id: '1',  name: '主桌',   type: 't-main',  r: 1, c: 2, guests: ['林謙志','駱啟明','孫福佑','陳高尚','林志宏','王俊傑','孫文山','游永中','魏福添','張家豪','李文義','議員'] },
-            { id: '2',  name: '主桌',   type: 't-main',  r: 1, c: 4, guests: ['陳俊青(議員)','曾百溪(議員)','林瑞才(議員)','賴俊男(議員)','吳瓊華(議員)','林昊佑(議員)','陳木生(議員)','張東玄(議員)','許修豪(議員)','陳義方(議員)','林孟令(議員)','張家銨(議員)'] },
-            // Row 2
-            { id: '16', name: '親友桌', type: 't-guest', r: 2, c: 1, guests: ['謝東曉*2','孫倚
+        try {
+            // ==========================================
+            // 資料庫
+            // ==========================================
+            const tablesData = [
+                // Row 1
+                { id: '15', name: '親友桌', type: 't-guest', r: 1, c: 1, guests: ['大隊長夫人','岳父','岳母','孫媽媽','淑君老師*4','緻瑋*3'] },
+                { id: '1',  name: '主桌',   type: 't-main',  r: 1, c: 2, guests: ['林謙志','駱啟明','孫福佑','陳高尚','林志宏','王俊傑','孫文山','游永中','魏福添','張家豪','李文義','議員'] },
+                { id: '2',  name: '主桌',   type: 't-main',  r: 1, c: 4, guests: ['陳俊青(議員)','曾百溪(議員)','林瑞才(議員)','賴俊男(議員)','吳瓊華(議員)','林昊佑(議員)','陳木生(議員)','張東玄(議員)','許修豪(議員)','陳義方(議員)','林孟令(議員)','張家銨(議員)'] },
+                // Row 2
+                { id: '16', name: '親友桌', type: 't-guest', r: 2, c: 1, guests: ['謝東曉*2','孫倚文*4','孫倚琳','孫文川*3','懿慧','吳宏健'] },
+                { id: '3',  name: '貴賓',   type: 't-vip',   r: 2, c: 2, guests: ['曾星明','林暉智*2','沈明賢*3','李文彬','蘇泓維','張道銘'] },
+                { id: '4',  name
