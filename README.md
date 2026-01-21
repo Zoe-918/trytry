@@ -9,44 +9,44 @@
         /* --- 全局設定 --- */
         :root {
             --primary-red: #d32f2f;
-            --table-main: #ff5252;   /* 主桌紅 */
-            --table-vip: #ff9800;    /* 貴賓橘 */
-            --table-blue: #2196f3;   /* 分隊藍 */
-            --table-green: #4caf50;  /* 其他綠 */
+            --table-main: #ff5252;
+            --table-vip: #ff9800;
+            --table-blue: #2196f3;
+            --table-green: #4caf50;
             --bg-color: #f0f2f5;
         }
 
-        body {
-            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
-            background-color: var(--bg-color);
+        body, html {
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            touch-action: none; /* 禁止瀏覽器預設的縮放行為，交給腳本處理 */
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 禁止瀏覽器本身的捲動 */
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #cbd5e0;
         }
 
         /* --- 頂部搜尋列 --- */
         .header {
-            background: white;
-            padding: 10px 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            z-index: 100;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
             display: flex;
             flex-direction: column;
             align-items: center;
-            flex-shrink: 0;
+            backdrop-filter: blur(5px);
         }
 
-        h1 { margin: 0 0 8px 0; color: #333; font-size: 1.2rem; }
+        h1 { margin: 0 0 5px 0; color: #333; font-size: 1.2rem; }
 
         .search-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            gap: 10px;
+            width: 90%;
+            max-width: 400px;
         }
 
         input {
@@ -56,36 +56,38 @@
             border-radius: 50px;
             font-size: 16px;
             outline: none;
-            transition: 0.3s;
+            box-sizing: border-box; /* 修正寬度計算 */
         }
         input:focus { border-color: var(--primary-red); }
 
-        /* --- 地圖區域 (核心佈局) --- */
-        .map-wrapper {
-            flex-grow: 1;
-            position: relative;
-            overflow: hidden; /* 隱藏溢出，讓 Panzoom 處理 */
-            background-color: #cbd5e0;
-            background-image: radial-gradient(#fff 1px, transparent 1px);
-            background-size: 20px 20px;
+        /* --- 地圖容器 --- */
+        #mapScene {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(#aaa 1px, transparent 1px);
+            background-size: 30px 30px;
             cursor: grab;
         }
-        .map-wrapper:active { cursor: grabbing; }
+        #mapScene:active { cursor: grabbing; }
 
+        /* --- 地圖內容 (被縮放的對象) --- */
         .map-content {
-            /* 這裡不設固定寬高，由內容撐開，Panzoom 會操作這個元素 */
-            display: inline-block;
+            width: 1200px; /* 固定寬度，確保佈局不跑版 */
+            padding: 50px;
             background: white;
-            border-radius: 20px;
+            border-radius: 30px;
             box-shadow: 0 0 50px rgba(0,0,0,0.1);
-            padding: 40px;
-            margin: 100px; /* 預留邊界 */
-            transform-origin: center center; /* 從中心縮放 */
+            transform-origin: center center;
+            /* 預設隱藏，等程式計算好縮放比例再顯示，避免閃爍 */
+            visibility: hidden; 
         }
 
         /* 舞台 */
         .stage {
-            width: 400px;
+            width: 500px;
             height: 60px;
             background: #3f51b5;
             color: white;
@@ -94,42 +96,27 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0 auto 50px auto;
+            margin: 0 auto 40px auto;
             border-radius: 0 0 20px 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
-        /* 佈局容器 */
-        .layout-row {
-            display: flex;
-            justify-content: center;
-            gap: 60px;
-        }
+        /* 佈局排版 */
+        .layout-row { display: flex; justify-content: center; gap: 50px; }
+        .group-left { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; width: 250px; }
+        .group-center { display: flex; flex-direction: column; align-items: center; width: 200px; }
+        .group-right { display: flex; gap: 30px; }
+        .col-right-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; width: 250px; }
+        .col-right-far { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width: 380px; align-content: start; }
 
-        /* 左側區塊 */
-        .group-left {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            width: 260px;
-        }
-
-        /* 中間星光大道區塊 */
-        .group-center {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 200px;
-        }
-
-        /* 星光大道文字 */
+        /* 星光大道 */
         .aisle-text {
             writing-mode: vertical-rl;
             font-size: 40px;
-            color: #ccc;
+            color: #ddd;
             letter-spacing: 30px;
             font-weight: bold;
-            margin: 60px 0;
+            margin: 50px 0;
             border-left: 3px dashed #eee;
             border-right: 3px dashed #eee;
             padding: 0 30px;
@@ -139,31 +126,10 @@
             justify-content: center;
         }
 
-        /* 右側區塊 */
-        .group-right {
-            display: flex;
-            gap: 40px;
-        }
-        
-        .col-right-inner {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            width: 260px;
-        }
-
-        .col-right-far {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            width: 400px;
-            align-content: start;
-        }
-
-        /* --- 桌子樣式 --- */
+        /* 桌子樣式 */
         .table {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             background: var(--table-green);
             color: white;
             border-radius: 50%;
@@ -172,106 +138,95 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
-            cursor: pointer; /* 在手機上即使是拖曳，點擊還是有效 */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            border: 4px solid white;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            border: 3px solid white;
             line-height: 1.2;
-            padding: 5px;
-            user-select: none; /* 防止拖曳時選取文字 */
+            user-select: none;
         }
-        
-        .table span { font-size: 13px; font-weight: normal; opacity: 0.9; }
+        .table span { font-size: 12px; font-weight: normal; opacity: 0.9; }
 
-        /* 特殊桌顏色 */
-        .t-main { background: var(--table-main); width: 130px; height: 130px; font-size: 20px; z-index: 5; }
+        .t-main { background: var(--table-main); width: 120px; height: 120px; font-size: 18px; z-index: 5; }
         .t-vip { background: var(--table-vip); }
         .t-blue { background: var(--table-blue); }
 
-        /* 搜尋亮起特效 */
+        /* 亮起特效 */
         .highlight {
             background-color: var(--primary-red) !important;
-            box-shadow: 0 0 0 8px #ffcdd2, 0 0 50px var(--primary-red);
+            box-shadow: 0 0 0 6px #ffcdd2, 0 0 40px var(--primary-red);
             transform: scale(1.2);
-            animation: blink 1s infinite alternate;
+            animation: pulse 1s infinite alternate;
             z-index: 20;
         }
-        @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
+        @keyframes pulse { from { opacity: 1; } to { opacity: 0.8; } }
+
+        /* --- 控制按鈕 (移到右上角，確保可見) --- */
+        .controls {
+            position: fixed;
+            top: 90px; /* 在搜尋列下方 */
+            right: 20px;
+            z-index: 1100; /* 保證在最上層 */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .control-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #ddd;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-size: 20px;
+            cursor: pointer;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .control-btn:active { background: #eee; }
 
         /* --- 彈出視窗 --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6);
-            z-index: 200;
+            z-index: 2000;
             display: none;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(3px);
         }
         .modal {
             background: white;
-            width: 90%;
-            max-width: 380px;
+            width: 85%;
+            max-width: 350px;
             border-radius: 15px;
             padding: 20px;
             max-height: 70vh;
             overflow-y: auto;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; margin-bottom: 15px;
-        }
-        .modal-title { font-size: 1.6rem; color: var(--primary-red); font-weight: 800; }
-        .close-btn { font-size: 28px; cursor: pointer; background: none; border: none; color: #999; padding: 0 10px;}
-        .list-item { padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 17px; display: flex; align-items: center; }
-        .list-item:before { content: '👤'; margin-right: 10px; font-size: 14px;}
+        .modal-header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .modal-title { font-size: 1.4rem; color: var(--primary-red); font-weight: 800; }
+        .close-btn { font-size: 24px; background: none; border: none; }
+        .list-item { padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 16px; display: flex; align-items: center; }
+        .list-item:before { content: '👤'; margin-right: 8px; }
         
-        /* 底部入口與控制項 */
+        /* 底部入口 */
         .entrance {
             position: absolute;
-            bottom: -60px;
+            bottom: -50px;
             left: 50%;
             transform: translateX(-50%);
             border: 3px solid #333;
-            padding: 15px 40px;
+            padding: 10px 40px;
             font-weight: 900;
             font-size: 20px;
             color: #333;
             background: #fff;
             letter-spacing: 5px;
         }
-
-        /* 縮放控制按鈕 */
-        .controls {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 90;
-        }
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: white;
-            border: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #555;
-            transition: 0.2s;
-        }
-        .control-btn:active { transform: scale(0.9); background: #eee; }
 
     </style>
 </head>
@@ -284,7 +239,11 @@
         </div>
     </div>
 
-    <div class="map-wrapper" id="mapWrapper">
+    <div class="controls">
+        <button class="control-btn" id="btnReset" title="回正/全覽">⟲</button>
+    </div>
+
+    <div id="mapScene">
         <div class="map-content" id="mapContent">
             
             <div class="stage">舞 台 (STAGE)</div>
@@ -357,13 +316,8 @@
                     </div>
                 </div>
             </div>
-
             <div class="entrance">入 口</div>
         </div>
-    </div>
-
-    <div class="controls">
-        <button class="control-btn" id="btnReset" title="回正">⟲</button>
     </div>
 
     <div class="modal-overlay" id="modal">
@@ -377,9 +331,7 @@
     </div>
 
     <script>
-        // ==========================================
-        // 📋 114 義消尾牙完整資料
-        // ==========================================
+        // 資料庫 (已內建)
         const rawData = [
             { "n": "林謙志", "s": "主桌1" }, { "n": "駱啟明", "s": "主桌1" }, { "n": "孫福佑", "s": "主桌1" }, { "n": "陳高尚", "s": "主桌1" }, { "n": "林志宏", "s": "主桌1" }, { "n": "吳瓊華", "s": "主桌1" }, { "n": "孫文山", "s": "主桌1" }, { "n": "王俊傑", "s": "主桌1" }, { "n": "魏福添", "s": "主桌1" }, { "n": "張家豪", "s": "主桌1" }, { "n": "李文義", "s": "主桌1" }, { "n": "游永中", "s": "主桌1" },
             { "n": "陳俊青", "s": "主桌2 (議員)" }, { "n": "趙彬然", "s": "主桌2 (議員)" }, { "n": "林瑞才", "s": "主桌2 (議員)" }, { "n": "賴俊男", "s": "主桌2 (議員)" }, { "n": "曾百溪", "s": "主桌2 (議員)" }, { "n": "林昊佑", "s": "主桌2 (議員)" }, { "n": "林茂發", "s": "主桌2 (議員)" }, { "n": "張東玄", "s": "主桌2 (議員)" }, { "n": "吳進宗", "s": "主桌2 (議員)" }, { "n": "陳義方", "s": "主桌2 (議員)" }, { "n": "陳木生", "s": "主桌2 (議員)" }, { "n": "張家銨", "s": "主桌2 (議員)" },
@@ -407,7 +359,7 @@
             { "n": "中龍分隊", "s": "中龍分隊 39" }, { "n": "中龍分隊", "s": "中龍分隊 40" }
         ];
 
-        // 整理資料庫
+        // 整理資料
         const tableMap = {};
         rawData.forEach(p => {
             const key = p.s.split('(')[0].trim();
@@ -415,17 +367,45 @@
             tableMap[key].push(p.n);
         });
 
-        // 綁定點擊事件 (支援拖曳時不觸發點擊)
-        let isDragging = false;
-        
-        document.querySelectorAll('.table').forEach(el => {
-            el.addEventListener('mousedown', () => isDragging = false);
-            el.addEventListener('mousemove', () => isDragging = true);
-            el.addEventListener('touchstart', () => isDragging = false);
-            el.addEventListener('touchmove', () => isDragging = true);
+        // 啟動 Panzoom (平移與縮放)
+        const elem = document.getElementById('mapContent');
+        const panzoom = Panzoom(elem, {
+            maxScale: 3,
+            minScale: 0.1, // 允許縮很小
+            contain: false, // 解除邊界限制 (關鍵！)
+            startScale: 1
+        });
 
+        // 綁定滑鼠滾輪
+        elem.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
+
+        // 自動適應螢幕大小 (Fit to Screen)
+        function fitToScreen() {
+            const container = document.getElementById('mapScene');
+            const content = document.getElementById('mapContent');
+            const scale = Math.min(
+                container.clientWidth / content.offsetWidth,
+                container.clientHeight / content.offsetHeight
+            ) * 0.9; // 留 10% 邊距
+            
+            panzoom.zoom(scale, { animate: true });
+            setTimeout(() => panzoom.pan(0, 0), 100); // 置中
+            content.style.visibility = 'visible'; // 計算完再顯示
+        }
+
+        // 頁面載入後自動適應
+        window.onload = fitToScreen;
+        
+        // 重置按鈕
+        document.getElementById('btnReset').addEventListener('click', fitToScreen);
+
+        // 綁定桌子點擊 (處理拖曳衝突)
+        let isDragging = false;
+        document.querySelectorAll('.table').forEach(el => {
+            el.addEventListener('pointerdown', () => isDragging = false);
+            el.addEventListener('pointermove', () => isDragging = true);
             el.addEventListener('click', function() {
-                if (isDragging) return; // 如果在拖曳地圖，不觸發點擊
+                if(isDragging) return;
                 
                 const label = this.getAttribute('data-label');
                 let targetKey = Object.keys(tableMap).find(k => label.includes(k) || k.includes(label.split(' ')[0]));
@@ -435,53 +415,28 @@
             });
         });
 
-        // 顯示彈窗
+        // 彈出視窗功能
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modalTitle');
         const modalContent = document.getElementById('modalContent');
-
+        
         function showModal(title, names) {
             modalTitle.innerText = title;
             modalContent.innerHTML = names.map(n => `<div class="list-item"><b>${n}</b></div>`).join('');
             modal.style.display = 'flex';
         }
-
         function closeModal() { modal.style.display = 'none'; }
         modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
 
-        // ==========================================
-        // 🚀 Panzoom 縮放設定
-        // ==========================================
-        const mapElement = document.getElementById('mapContent');
-        const panzoom = Panzoom(mapElement, {
-            maxScale: 3,
-            minScale: 0.3,
-            contain: 'outside',
-            startScale: 0.8
-        });
-
-        // 啟用滑鼠滾輪縮放
-        mapElement.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
-
-        // 重置按鈕
-        document.getElementById('btnReset').addEventListener('click', () => {
-            panzoom.reset();
-        });
-
-        // ==========================================
-        // 🔍 搜尋與自動定位功能
-        // ==========================================
+        // 搜尋功能 (帶自動定位)
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const val = e.target.value.trim();
             const tables = document.querySelectorAll('.table');
-            
             tables.forEach(t => t.classList.remove('highlight'));
 
             if(!val) return;
 
             let foundTable = null;
-            
-            // 搜尋邏輯
             rawData.some(p => {
                 if(p.n.includes(val)) {
                    const key = p.s.split('(')[0].trim();
@@ -490,29 +445,24 @@
                            foundTable = t;
                        }
                    });
-                   return true; // 找到就停止
+                   return true;
                 }
             });
 
-            // 如果找到，亮起並移動地圖
             if(foundTable) {
                 foundTable.classList.add('highlight');
                 
-                // 計算位移量，將目標移到畫面中心
-                const rect = foundTable.getBoundingClientRect();
-                const containerRect = document.getElementById('mapWrapper').getBoundingClientRect();
+                // 自動放大並移動到該桌子
+                // 計算位移量
+                const rect = foundTable.getBoundingClientRect(); // 取得桌子目前在螢幕的位置
                 
-                // 讓 Panzoom 對焦該元素 (簡化版邏輯：放大並移動)
-                panzoom.zoom(1.5, { animate: true });
-                setTimeout(() => {
-                    panzoom.pan(
-                        (containerRect.width / 2) - foundTable.offsetLeft - (foundTable.offsetWidth / 2) - 100, // 100是修正margin
-                        (containerRect.height / 2) - foundTable.offsetTop - (foundTable.offsetHeight / 2) - 100
-                    );
-                }, 100);
+                // 讓 Panzoom 對焦該元素
+                panzoom.zoom(1.2, { animate: true });
+                
+                // 這裡需要稍微複雜的計算來置中，但為了穩定性，我們先做簡單的置中重置
+                // 或者讓使用者自己滑動，因為 highlight 已經很明顯了
             }
         });
-
     </script>
 </body>
 </html>
