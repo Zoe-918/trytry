@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>114義消尾牙 - 智慧座位導覽</title>
+    <title>114義消尾牙 - 智慧導覽系統</title>
     <style>
         :root {
             --primary-gold: #d4af37;
@@ -24,7 +24,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden; /* 禁止整個網頁捲動，只讓地圖區捲動 */
+            overflow: hidden; 
         }
 
         /* --- 頂部搜尋與資訊列 --- */
@@ -57,33 +57,31 @@
             box-shadow: 0 0 8px rgba(192, 57, 43, 0.3);
         }
 
-        /* --- 地圖顯示區域 (Viewport) --- */
+        /* --- 地圖顯示區域 --- */
         .map-viewport {
             flex-grow: 1;
-            overflow: auto; /* 允許捲動 */
+            overflow: auto; 
             position: relative;
             background-color: #f4f4f4;
             background-image: radial-gradient(#ddd 1px, transparent 1px);
             background-size: 20px 20px;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* 內容從上方開始 */
+            align-items: flex-start; 
             padding: 40px;
             cursor: grab;
         }
 
         .map-viewport:active { cursor: grabbing; }
 
-        /* --- 可縮放的內容容器 --- */
         .zoom-wrapper {
             transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             transform-origin: top center;
-            padding-bottom: 100px; /* 底部留白 */
+            padding-bottom: 100px;
         }
 
-        /* 舞台 */
         .stage {
-            width: 800px; /* 固定寬度，確保縮放時比例一致 */
+            width: 800px;
             height: 60px;
             background: linear-gradient(to bottom, #333, #000);
             color: gold;
@@ -101,7 +99,6 @@
         /* 座位圖網格 */
         .seating-chart {
             display: grid;
-            /* 9列佈局：左1, 左2, [星光大道], 右中1, 右中2, [走道], 右1, 右2, 右3 */
             grid-template-columns: 80px 80px var(--aisle-width) 80px 80px var(--aisle-width) 80px 80px 80px;
             gap: 15px;
             justify-content: center;
@@ -127,7 +124,6 @@
             transition: all 0.3s;
         }
 
-        /* 顏色分類 */
         .t-main { background-color: var(--table-main); }
         .t-vip { background-color: var(--table-vip); }
         .t-org { background-color: var(--table-org); }
@@ -136,20 +132,18 @@
         .table-num { font-size: 18px; font-weight: 900; line-height: 1; }
         .table-name { font-size: 11px; margin-top: 2px; line-height: 1.1; overflow: hidden; white-space: nowrap; width: 90%; text-overflow: ellipsis;}
 
-        /* --- 搜尋特效：聚光燈模式 --- */
-        /* 1. 未被搜尋到的桌子變暗 */
+        /* --- 搜尋特效 --- */
         .table.dimmed {
             opacity: 0.15;
             filter: grayscale(100%);
             transform: scale(0.9);
         }
 
-        /* 2. 被搜尋到的桌子高亮 */
         .table.highlight {
             opacity: 1 !important;
             filter: none;
             z-index: 100;
-            transform: scale(1.3); /* 放大 */
+            transform: scale(1.3);
             box-shadow: 0 0 0 5px #fff, 0 0 20px var(--primary-red);
             animation: bounce 1s infinite;
         }
@@ -183,7 +177,7 @@
             font-size: 1.2em;
         }
 
-        /* --- 縮放控制按鈕 --- */
+        /* --- 縮放控制 --- */
         .zoom-controls {
             position: fixed;
             bottom: 20px;
@@ -252,7 +246,7 @@
 
     <div class="control-panel">
         <h1>114 義消尾牙座次表</h1>
-        <input type="text" id="searchInput" placeholder="搜尋姓名、單位... (例如：林謙志、議員、風電)">
+        <input type="text" id="searchInput" placeholder="請輸入姓名 (例如：林謙志、王志龍)">
     </div>
 
     <div class="map-viewport" id="mapViewport">
@@ -262,7 +256,6 @@
             <div class="seating-chart" id="chart">
                 <div class="aisle-label" style="grid-column: 3;">★ 星光大道 ★</div>
                 <div class="aisle-label" style="grid-column: 6;">走道</div>
-                
                 <div class="entrance-marker">
                     <div style="font-size:30px;">⬆</div>
                     入口
@@ -289,7 +282,7 @@
 
     <script>
         // ==========================================
-        // 1. 完整資料庫
+        // 資料庫
         // ==========================================
         const tablesData = [
             // Row 1
@@ -297,21 +290,4 @@
             { id: '1',  name: '主桌',   type: 't-main',  r: 1, c: 2, guests: ['林謙志','駱啟明','孫福佑','陳高尚','林志宏','王俊傑','孫文山','游永中','魏福添','張家豪','李文義','議員'] },
             { id: '2',  name: '主桌',   type: 't-main',  r: 1, c: 4, guests: ['陳俊青(議員)','曾百溪(議員)','林瑞才(議員)','賴俊男(議員)','吳瓊華(議員)','林昊佑(議員)','陳木生(議員)','張東玄(議員)','許修豪(議員)','陳義方(議員)','林孟令(議員)','張家銨(議員)'] },
             // Row 2
-            { id: '16', name: '親友桌', type: 't-guest', r: 2, c: 1, guests: ['謝東曉*2','孫倚文*4','孫倚琳','孫文川*3','懿慧','吳宏健'] },
-            { id: '3',  name: '貴賓',   type: 't-vip',   r: 2, c: 2, guests: ['曾星明','林暉智*2','沈明賢*3','李文彬','蘇泓維','張道銘'] },
-            { id: '4',  name: '副團長', type: 't-vip',   r: 2, c: 4, guests: ['林美秀','林曼莉*2','黃章一','陳德聰','王順元','高貴美*2'] },
-            { id: '5',  name: '風電',   type: 't-vip',   r: 2, c: 5, guests: ['王志龍','洪瑞添','黃憲章','黃國誌','廖光政','林永晟','許鴻茗','喬永福','李武勳','王志文'] },
-            { id: '13', name: '四港',   type: 't-org',   r: 2, c: 7, guests: ['基隆港*4','西碼頭分隊*2','警消*2','周朝祥','隨行人員'] },
-            { id: 'No1',name: '第四',   type: 't-org',   r: 2, c: 8, guests: ['第四救災救護大隊'] },
-            { id: 'No2',name: '清泉',   type: 't-org',   r: 2, c: 9, guests: ['清泉分隊'] },
-            // Row 3
-            { id: '17', name: '守望',   type: 't-org',   r: 3, c: 1, guests: ['大肚守望相助隊'] },
-            { id: '6',  name: '貴賓',   type: 't-vip',   r: 3, c: 2, guests: ['洪偉欽','張文烈','許宥鈞','許博任','古崇序','賴景民','吳俊毅','陳寓綸','余家均'] },
-            { id: '7',  name: '顧問',   type: 't-vip',   r: 3, c: 4, guests: ['張介堂','楊朝凱','劉純娟*2','蔡青榕','廖世義','施榮昌*2'] },
-            { id: '8',  name: '顧問',   type: 't-vip',   r: 3, c: 5, guests: ['陳世昌','張家華','陳文宗','游世雍','黃盛業*2','王詠建','陶明揚*2'] },
-            { id: '14', name: '四港',   type: 't-org',   r: 3, c: 7, guests: ['基隆港*4','高雄港*2','警消*2','蔡賢廸'] },
-            { id: 'No3',name: '大肚',   type: 't-org',   r: 3, c: 8, guests: ['大肚分隊'] },
-            { id: 'No4',name: '清水',   type: 't-org',   r: 3, c: 9, guests: ['清水分隊'] },
-            // Row 4
-            { id: '12', name: '貴賓',   type: 't-vip',   r: 4, c: 1, guests: ['江東英','張熙坤','洪崑峯','張書凱','傳令','隨行人員*2'] },
-            { id: '9',  name: '顧問',   type: 't-vip',   r: 4, c: 2, guests: ['紀穎龍','陳厚諭*2','李彥鋒','郭明原*2','張耀潭*
+            { id: '16', name: '親友桌', type: 't-guest', r: 2, c: 1, guests: ['謝東曉*2','孫倚
