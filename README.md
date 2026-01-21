@@ -3,218 +3,345 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>114義消尾牙 - 視覺化座位導覽</title>
+    <title>114義消尾牙 - 座位導覽圖</title>
     <style>
         /* --- 全局設定 --- */
         :root {
-            --primary-color: #d32f2f;
-            --secondary-color: #f8f9fa;
-            --table-main-color: #ff5252; /* 主桌顏色 */
-            --table-vip-color: #ff9800;  /* 貴賓/顧問顏色 */
-            --table-normal-color: #4caf50; /* 一般桌顏色 */
-            --highlight-color: #2979ff;  /* 搜尋選中顏色 */
+            --primary-red: #d32f2f;
+            --table-main: #ff5252;   /* 主桌紅 */
+            --table-vip: #ff9800;    /* 貴賓橘 */
+            --table-blue: #2196f3;   /* 分隊藍 */
+            --table-green: #4caf50;  /* 其他綠 */
+            --bg-color: #f0f2f5;
         }
+
         body {
-            font-family: "Microsoft JhengHei", sans-serif;
-            background-color: #eceff1;
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: var(--bg-color);
             margin: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden; /* 防止整個頁面捲動，只讓地圖區捲動 */
+            overflow: hidden;
         }
 
-        /* --- 上方搜尋列 --- */
+        /* --- 頂部搜尋列 --- */
         .header {
             background: white;
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 10;
-            flex-shrink: 0;
+            padding: 15px 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
+            flex-shrink: 0;
         }
-        h1 { margin: 0 0 10px 0; font-size: 1.5rem; color: #333; }
-        .search-box {
+
+        h1 { margin: 0 0 10px 0; color: #333; font-size: 1.5rem; }
+
+        .search-container {
             position: relative;
             width: 100%;
             max-width: 500px;
+            display: flex;
+            gap: 10px;
         }
+
         input {
             width: 100%;
             padding: 12px 20px;
             border: 2px solid #ddd;
-            border-radius: 25px;
+            border-radius: 50px;
             font-size: 16px;
             outline: none;
             transition: 0.3s;
-            box-sizing: border-box;
         }
-        input:focus { border-color: var(--primary-color); }
+        input:focus { border-color: var(--primary-red); }
 
-        /* --- 地圖區域 (可縮放移動) --- */
-        .map-container {
+        /* --- 地圖區域 (核心佈局) --- */
+        .map-wrapper {
             flex-grow: 1;
-            overflow: auto; /* 允許捲動 */
-            position: relative;
-            background-image: radial-gradient(#ddd 1px, transparent 1px);
-            background-size: 20px 20px; /* 網格背景 */
-            padding: 40px 20px;
+            overflow: auto; /* 允許地圖捲動 */
+            padding: 20px;
             display: flex;
             justify-content: center;
+            /* 背景網格裝飾 */
+            background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
+            background-size: 20px 20px;
         }
-        
+
+        .map-content {
+            position: relative;
+            width: 1200px; /* 地圖固定寬度，確保不跑版 */
+            min-height: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* 舞台 */
         .stage {
-            width: 60%;
-            height: 50px;
-            background: #5c6bc0;
+            width: 400px;
+            height: 60px;
+            background: #3f51b5;
             color: white;
+            font-size: 24px;
+            font-weight: bold;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin: 0 auto 30px auto;
             border-radius: 0 0 20px 20px;
-            margin: 0 auto 40px auto;
-            font-weight: bold;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            position: absolute;
-            top: 0;
-            left: 20%;
         }
 
-        /* 桌子佈局網格 */
-        .tables-grid {
-            margin-top: 80px; /* 留給舞台空間 */
+        /* 佈局容器：使用 Flexbox 模擬圖片的三大區塊 */
+        .layout-row {
             display: flex;
-            flex-wrap: wrap;
             justify-content: center;
-            gap: 20px;
-            max-width: 1000px;
-            padding-bottom: 100px; /* 底部留白 */
+            gap: 40px;
         }
 
-        /* 單個桌子樣式 */
-        .table {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background-color: var(--table-normal-color);
-            color: white;
+        /* 左側區塊 */
+        .group-left {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 兩排 */
+            gap: 20px;
+            width: 250px;
+        }
+
+        /* 中間星光大道區塊 */
+        .group-center {
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 160px;
+        }
+
+        /* 星光大道文字 */
+        .aisle-text {
+            writing-mode: vertical-rl;
+            font-size: 30px;
+            color: #ccc;
+            letter-spacing: 20px;
+            font-weight: bold;
+            margin: 50px 0;
+            border-left: 2px dashed #ddd;
+            border-right: 2px dashed #ddd;
+            padding: 0 20px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 右側區塊 (含最右邊的複雜區) */
+        .group-right {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .col-right-inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 兩排 */
+            gap: 20px;
+            width: 250px;
+        }
+
+        .col-right-far {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr; /* 最右邊三排 */
+            gap: 15px;
+            width: 380px;
+            align-content: start;
+        }
+
+        /* --- 桌子樣式 --- */
+        .table {
+            width: 90px;
+            height: 90px;
+            background: var(--table-green);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
             position: relative;
+            border: 3px solid white;
+            line-height: 1.2;
             padding: 5px;
-            border: 4px solid white;
         }
-        .table:hover { transform: scale(1.1); z-index: 5; }
-        
-        /* 不同類型的桌子顏色 */
-        .type-main { background-color: var(--table-main-color); width: 100px; height: 100px; font-size: 16px; z-index: 2; }
-        .type-vip { background-color: var(--table-vip-color); }
-        
-        /* 搜尋選中特效 */
+        .table:hover { transform: scale(1.1); z-index: 10; }
+        .table span { font-size: 12px; font-weight: normal; opacity: 0.9; }
+
+        /* 特殊桌顏色 */
+        .t-main { background: var(--table-main); width: 110px; height: 110px; font-size: 18px; z-index: 5; } /* 主桌大一點 */
+        .t-vip { background: var(--table-vip); }
+        .t-blue { background: var(--table-blue); }
+
+        /* 搜尋亮起特效 */
         .highlight {
-            background-color: var(--highlight-color) !important;
-            animation: pulse 1.5s infinite;
-            border-color: #ffeb3b;
-            box-shadow: 0 0 20px var(--highlight-color);
-            transform: scale(1.2);
-            z-index: 10;
+            background-color: var(--primary-red) !important;
+            box-shadow: 0 0 0 5px #ffcdd2, 0 0 30px var(--primary-red);
+            transform: scale(1.15);
+            animation: blink 1s infinite alternate;
+            z-index: 20;
         }
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(41, 121, 255, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(41, 121, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(41, 121, 255, 0); }
-        }
-
-        /* --- 彈出視窗 (Modal) --- */
+        /* --- 彈出視窗 --- */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            backdrop-filter: blur(3px);
         }
         .modal {
             background: white;
-            padding: 25px;
-            border-radius: 15px;
             width: 90%;
             max-width: 400px;
+            border-radius: 15px;
+            padding: 20px;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            animation: slideUp 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-        .modal-title { font-size: 1.5rem; font-weight: bold; color: #333; }
-        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
-        
-        .guest-list { list-style: none; padding: 0; margin: 0; }
-        .guest-item { padding: 10px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; }
-        .guest-item:last-child { border-bottom: none; }
-        .guest-name { font-weight: bold; font-size: 1.1rem; }
-        .guest-highlight { color: var(--primary-color); background: #ffebee; border-radius: 4px; padding: 0 5px;}
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;
+        }
+        .modal-title { font-size: 1.5rem; color: var(--primary-red); font-weight: bold; }
+        .close-btn { font-size: 24px; cursor: pointer; background: none; border: none; color: #888; }
+        .list-item { padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 16px; }
+        .list-item b { color: #333; }
+        .match-name { color: white; background: var(--primary-red); padding: 2px 5px; border-radius: 4px; }
 
-        /* 圖例說明 */
-        .legend { display: flex; gap: 10px; margin-top: 5px; font-size: 12px; color: #666; justify-content: center; flex-wrap: wrap;}
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 3px; }
+        /* 底部入口 */
+        .entrance {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 2px solid #333;
+            padding: 10px 30px;
+            font-weight: bold;
+            color: #333;
+            background: #fff;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>🧧 114義消尾牙座次圖</h1>
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="輸入姓名查找座位 (例如：林謙志)">
-        </div>
-        <div class="legend">
-            <span><span class="dot" style="background:var(--table-main-color)"></span>主桌</span>
-            <span><span class="dot" style="background:var(--table-vip-color)"></span>貴賓/顧問</span>
-            <span><span class="dot" style="background:var(--table-normal-color)"></span>一般桌</span>
-            <span><span class="dot" style="background:var(--highlight-color)"></span>搜尋結果</span>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="請輸入姓名 (例如：林謙志)">
         </div>
     </div>
 
-    <div class="map-container" id="mapContainer">
-        <div class="stage">舞 台 (STAGE)</div>
-        <div class="tables-grid" id="tablesGrid">
+    <div class="map-wrapper">
+        <div class="map-content">
+            <div class="stage">舞 台 (STAGE)</div>
+
+            <div class="layout-row">
+                
+                <div class="group-left">
+                    <div class="table t-vip" data-label="親友桌 14">親友<br>14</div>
+                    <div class="table t-vip" data-label="親友桌 15">親友<br>15</div>
+                    <div class="table t-green" data-label="第四大隊 17-25">大肚<br>守望</div> <div class="table t-vip" data-label="四大港桌 12">貴賓<br>12</div>
+                    <div class="table t-blue" data-label="中龍分隊 39">中龍<br>39</div> <div class="table t-blue" data-label="中龍分隊 40">中龍<br>40</div>
+
+                    <div class="table t-vip" data-label="貴賓桌 3">貴賓<br>3</div>
+                    <div class="table t-vip" data-label="貴賓桌 6">貴賓<br>6</div>
+                    <div class="table t-vip" data-label="顧問桌 9">顧問<br>9</div>
+                    <div class="table t-blue" data-label="第二中隊 28">二中隊<br>28</div>
+                    <div class="table t-blue" data-label="南堤分隊 31">南堤<br>31</div>
+                </div>
+
+                <div class="group-center">
+                    <div style="display:flex; gap:20px; margin-bottom: 20px;">
+                        <div class="table t-main" data-label="主桌1">主桌<br>1</div>
+                        <div class="table t-main" data-label="主桌2 (議員)">主桌<br>2</div>
+                    </div>
+                    <div class="aisle-text">星 光 大 道</div>
+                </div>
+
+                <div class="group-right">
+                    
+                    <div class="col-right-inner">
+                        <div class="table t-vip" data-label="貴賓桌4 (風電)">貴賓<br>4</div>
+                        <div class="table t-vip" data-label="顧問桌 7">顧問<br>7</div>
+                        <div class="table t-vip" data-label="顧問桌 10">顧問<br>10</div>
+                        <div class="table t-blue" data-label="第一中隊 26-27">一中隊<br>26</div>
+                        <div class="table t-blue" data-label="第一分隊 29-30">第一<br>30</div>
+                        <div class="table t-blue" data-label="第一分隊 29-30">第一<br>31</div> <div class="table t-vip" data-label="副團長桌5">副團長<br>5</div>
+                        <div class="table t-vip" data-label="顧問桌 8">顧問<br>8</div>
+                        <div class="table t-vip" data-label="貴賓桌11">港警<br>11</div>
+                        <div class="table t-blue" data-label="第一中隊 26-27">一中隊<br>27</div>
+                        <div class="table t-blue" data-label="防風林分隊 34">防風林<br>34</div>
+                        <div class="table t-blue" data-label="合桌 32">合桌<br>33</div>
+                    </div>
+
+                    <div class="col-right-far">
+                        <div class="table t-vip" data-label="四大港桌 13">四港<br>13</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">第四<br>大隊</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">清泉</div>
+                        
+                        <div class="table t-vip" data-label="四大港桌 14">四港<br>14</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">大肚</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">清水</div>
+
+                        <div class="table t-blue" data-label="西碼頭分隊 36">西碼頭<br>36</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">龍井</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">犁份</div>
+
+                        <div class="table t-blue" data-label="西碼頭分隊 37">西碼頭<br>37</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">沙鹿</div>
+                        <div class="table t-green" data-label="第四大隊 17-25">梧棲</div>
+
+                        <div class="table t-blue" data-label="西碼頭分隊 38">西碼頭<br>38</div>
+                        <div class="table t-blue" data-label="中龍分隊 39">西碼頭<br>39</div> <div class="table t-green" data-label="第四大隊 17-25">海爆</div>
+
+                        <div class="table t-blue" data-label="西碼頭分隊 35">防風林<br>35</div>
+                        <div class="table t-blue" data-label="中龍分隊 39">童綜合</div> <div class="table t-blue" data-label="中龍分隊 39">光田</div>
+                    </div>
+                </div>
             </div>
+
+            <div class="entrance">入 口</div>
+        </div>
     </div>
 
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-overlay" id="modal">
         <div class="modal">
             <div class="modal-header">
-                <div class="modal-title" id="modalTitle">主桌 1</div>
-                <button class="close-btn" onclick="closeModalDirect()">×</button>
+                <div class="modal-title" id="modalTitle">桌名</div>
+                <button class="close-btn" onclick="closeModal()">×</button>
             </div>
-            <ul class="guest-list" id="guestList">
-                </ul>
+            <div id="modalContent"></div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 📋 資料庫 (已整合真實資料)
+        // 📋 114 義消尾牙完整資料 (已對應圖片邏輯)
         // ==========================================
         const rawData = [
             { "n": "林謙志", "s": "主桌1" }, { "n": "駱啟明", "s": "主桌1" }, { "n": "孫福佑", "s": "主桌1" }, { "n": "陳高尚", "s": "主桌1" }, { "n": "林志宏", "s": "主桌1" }, { "n": "吳瓊華", "s": "主桌1" }, { "n": "孫文山", "s": "主桌1" }, { "n": "王俊傑", "s": "主桌1" }, { "n": "魏福添", "s": "主桌1" }, { "n": "張家豪", "s": "主桌1" }, { "n": "李文義", "s": "主桌1" }, { "n": "游永中", "s": "主桌1" },
-            { "n": "陳俊青", "s": "主桌2" }, { "n": "趙彬然", "s": "主桌2" }, { "n": "林瑞才", "s": "主桌2" }, { "n": "賴俊男", "s": "主桌2" }, { "n": "曾百溪", "s": "主桌2" }, { "n": "林昊佑", "s": "主桌2" }, { "n": "林茂發", "s": "主桌2" }, { "n": "張東玄", "s": "主桌2" }, { "n": "吳進宗", "s": "主桌2" }, { "n": "陳義方", "s": "主桌2" }, { "n": "陳木生", "s": "主桌2" }, { "n": "張家銨", "s": "主桌2" },
+            { "n": "陳俊青", "s": "主桌2 (議員)" }, { "n": "趙彬然", "s": "主桌2 (議員)" }, { "n": "林瑞才", "s": "主桌2 (議員)" }, { "n": "賴俊男", "s": "主桌2 (議員)" }, { "n": "曾百溪", "s": "主桌2 (議員)" }, { "n": "林昊佑", "s": "主桌2 (議員)" }, { "n": "林茂發", "s": "主桌2 (議員)" }, { "n": "張東玄", "s": "主桌2 (議員)" }, { "n": "吳進宗", "s": "主桌2 (議員)" }, { "n": "陳義方", "s": "主桌2 (議員)" }, { "n": "陳木生", "s": "主桌2 (議員)" }, { "n": "張家銨", "s": "主桌2 (議員)" },
             { "n": "曾星明", "s": "貴賓桌3" }, { "n": "林暉智", "s": "貴賓桌3" }, { "n": "沈明賢", "s": "貴賓桌3" }, { "n": "李文彬", "s": "貴賓桌3" }, { "n": "蔡清松", "s": "貴賓桌3" }, { "n": "余凌冲", "s": "貴賓桌3" }, { "n": "張道銘", "s": "貴賓桌3" },
-            { "n": "王志龍", "s": "貴賓桌4" }, { "n": "洪瑞添", "s": "貴賓桌4" }, { "n": "黃憲章", "s": "貴賓桌4" }, { "n": "黃國誌", "s": "貴賓桌4" }, { "n": "廖光政", "s": "貴賓桌4" }, { "n": "林永晟", "s": "貴賓桌4" }, { "n": "許鴻茗", "s": "貴賓桌4" }, { "n": "喬永福", "s": "貴賓桌4" }, { "n": "孫境堯", "s": "貴賓桌4" },
+            { "n": "王志龍", "s": "貴賓桌4 (風電)" }, { "n": "洪瑞添", "s": "貴賓桌4 (風電)" }, { "n": "黃憲章", "s": "貴賓桌4 (風電)" }, { "n": "黃國誌", "s": "貴賓桌4 (風電)" }, { "n": "廖光政", "s": "貴賓桌4 (風電)" }, { "n": "林永晟", "s": "貴賓桌4 (風電)" }, { "n": "許鴻茗", "s": "貴賓桌4 (風電)" }, { "n": "喬永福", "s": "貴賓桌4 (風電)" }, { "n": "孫境堯", "s": "貴賓桌4 (風電)" },
             { "n": "林美秀", "s": "副團長桌5" }, { "n": "林曼莉", "s": "副團長桌5" }, { "n": "黃章一", "s": "副團長桌5" }, { "n": "陳德聰", "s": "副團長桌5" }, { "n": "王順元", "s": "副團長桌5" }, { "n": "高貴美", "s": "副團長桌5" },
             { "n": "洪偉欽", "s": "貴賓桌6" }, { "n": "張文烈", "s": "貴賓桌6" }, { "n": "許宥鈞", "s": "貴賓桌6" }, { "n": "許博任", "s": "貴賓桌6" }, { "n": "古崇序", "s": "貴賓桌6" }, { "n": "賴景民", "s": "貴賓桌6" }, { "n": "吳俊毅", "s": "貴賓桌6" }, { "n": "陳寓綸", "s": "貴賓桌6" }, { "n": "余家均", "s": "貴賓桌6" },
             { "n": "張介堂", "s": "顧問桌7" }, { "n": "楊朝凱", "s": "顧問桌7" }, { "n": "劉純娟", "s": "顧問桌7" }, { "n": "蔡青榕", "s": "顧問桌7" }, { "n": "廖世義", "s": "顧問桌7" }, { "n": "施隆昌", "s": "顧問桌7" },
@@ -222,14 +349,14 @@
             { "n": "紀穎龍", "s": "顧問桌9" }, { "n": "陳厚諭", "s": "顧問桌9" }, { "n": "李彥鋒", "s": "顧問桌9" }, { "n": "郭明原", "s": "顧問桌9" }, { "n": "張耀潭", "s": "顧問桌9" }, { "n": "郭庭興", "s": "顧問桌9" },
             { "n": "張春洲", "s": "顧問桌10" }, { "n": "童經理", "s": "顧問桌10" }, { "n": "戶張龍一", "s": "顧問桌10" }, { "n": "蕭梓芮", "s": "顧問桌10" }, { "n": "張晉維", "s": "顧問桌10" }, { "n": "江東英", "s": "顧問桌10" },
             { "n": "王慶陸", "s": "貴賓桌11" }, { "n": "張熙坤", "s": "貴賓桌11" }, { "n": "洪崑峯", "s": "貴賓桌11" }, { "n": "張書凱", "s": "貴賓桌11" }, { "n": "廖秀娥", "s": "貴賓桌11" }, { "n": "王泰文", "s": "貴賓桌11" },
-            { "n": "基隆港", "s": "四大港桌12" }, { "n": "西碼頭分隊", "s": "四大港桌12" }, { "n": "周朝祥", "s": "四大港桌12" }, { "n": "蔡賢廸", "s": "四大港桌12" },
-            { "n": "基隆港", "s": "四大港桌13" }, { "n": "高雄港", "s": "四大港桌13" }, { "n": "黃敬雲", "s": "四大港桌13" }, { "n": "朱榮聰", "s": "四大港桌13" },
-            { "n": "大隊長夫人", "s": "親友桌14" }, { "n": "岳父岳母", "s": "親友桌14" }, { "n": "孫媽媽", "s": "親友桌14" }, { "n": "淑君老師", "s": "親友桌14" }, { "n": "緻瑋", "s": "親友桌14" },
-            { "n": "謝東曉", "s": "親友桌15" }, { "n": "孫倚文", "s": "親友桌15" }, { "n": "孫倚琳", "s": "親友桌15" }, { "n": "孫文川", "s": "親友桌15" }, { "n": "懿慧", "s": "親友桌15" }, { "n": "吳宏健", "s": "親友桌15" },
+            { "n": "基隆港", "s": "四大港桌 12" }, { "n": "西碼頭分隊", "s": "四大港桌 12" }, { "n": "周朝祥", "s": "四大港桌 12" }, { "n": "蔡賢廸", "s": "四大港桌 12" },
+            { "n": "基隆港", "s": "四大港桌 13" }, { "n": "高雄港", "s": "四大港桌 13" }, { "n": "黃敬雲", "s": "四大港桌 13" }, { "n": "朱榮聰", "s": "四大港桌 13" },
+            { "n": "大隊長夫人", "s": "親友桌 14" }, { "n": "岳父岳母", "s": "親友桌 14" }, { "n": "孫媽媽", "s": "親友桌 14" }, { "n": "淑君老師", "s": "親友桌 14" }, { "n": "緻瑋", "s": "親友桌 14" },
+            { "n": "謝東曉", "s": "親友桌 15" }, { "n": "孫倚文", "s": "親友桌 15" }, { "n": "孫倚琳", "s": "親友桌 15" }, { "n": "孫文川", "s": "親友桌 15" }, { "n": "懿慧", "s": "親友桌 15" }, { "n": "吳宏健", "s": "親友桌 15" },
             { "n": "第四大隊/海爆", "s": "第四大隊 17-25" }, { "n": "大肚/龍井/沙鹿", "s": "第四大隊 17-25" }, { "n": "梧棲/清水/清泉/犁份", "s": "第四大隊 17-25" },
             { "n": "第一中隊", "s": "第一中隊 26-27" }, { "n": "邦尼國際", "s": "第一中隊 26-27" },
             { "n": "陳思學", "s": "第二中隊 28" }, { "n": "郭丁湖", "s": "第二中隊 28" }, { "n": "陳科賓", "s": "第二中隊 28" }, { "n": "鄭紫妤", "s": "第二中隊 28" }, { "n": "吳慶章", "s": "第二中隊 28" }, { "n": "海巡隨行", "s": "第二中隊 28" },
-            { "n": "第一分隊", "s": "第一分隊 29" }, { "n": "第一分隊", "s": "第一分隊 30" },
+            { "n": "第一分隊", "s": "第一分隊 29-30" }, { "n": "第一分隊", "s": "第一分隊 29-30" },
             { "n": "南堤分隊", "s": "南堤分隊 31" },
             { "n": "防風林分隊", "s": "合桌 32" }, { "n": "第一分隊", "s": "合桌 32" },
             { "n": "防風林分隊", "s": "防風林分隊 33" }, { "n": "防風林分隊", "s": "防風林分隊 34" },
@@ -237,148 +364,87 @@
             { "n": "中龍分隊", "s": "中龍分隊 39" }, { "n": "中龍分隊", "s": "中龍分隊 40" }
         ];
 
-        // ==========================================
-        // 🛠️ 核心邏輯
-        // ==========================================
-        
-        // 1. 整理資料：把平整的名單轉成 { "桌名": [人名, 人名...] }
-        const tablesData = {};
-        rawData.forEach(item => {
-            // 簡化桌名顯示 (移除過長的括號說明，讓球球顯示好看點)
-            let tableName = item.s.split('(')[0].trim(); 
-            if (!tablesData[tableName]) {
-                tablesData[tableName] = [];
-            }
-            tablesData[tableName].push(item.n);
+        // 整理資料：將人名歸類到桌號
+        const tableMap = {};
+        rawData.forEach(p => {
+            const key = p.s.split('(')[0].trim(); // 簡化Key，例如 "主桌1 (xx)" -> "主桌1"
+            if(!tableMap[key]) tableMap[key] = [];
+            tableMap[key].push(p.n);
         });
 
-        // 2. 自定義排序邏輯：主桌 -> 貴賓 -> 顧問 -> 數字
-        const sortOrder = ["主桌", "副團長", "貴賓", "顧問", "警察", "四大港", "親友", "第四", "第一", "第二", "南堤", "防風", "西碼頭", "中龍"];
-        
-        const sortedTableNames = Object.keys(tablesData).sort((a, b) => {
-            // 提取關鍵字索引
-            let indexA = sortOrder.findIndex(key => a.includes(key));
-            let indexB = sortOrder.findIndex(key => b.includes(key));
-            
-            // 如果都在清單內，照清單順序
-            if (indexA !== -1 && indexB !== -1) {
-                if (indexA !== indexB) return indexA - indexB;
-                // 同類型比數字
-                return parseInt(a.replace(/\D/g,'')) - parseInt(b.replace(/\D/g,''));
-            }
-            // 如果只有一個在清單內，在清單內的排前面
-            if (indexA !== -1) return -1;
-            if (indexB !== -1) return 1;
-            
-            // 剩下的照數字或字串排
-            return a.localeCompare(b, 'zh-Hant');
-        });
-
-        // 3. 生成畫面
-        const grid = document.getElementById('tablesGrid');
-        
-        sortedTableNames.forEach(tableName => {
-            const el = document.createElement('div');
-            el.className = 'table';
-            el.innerText = tableName.replace("分隊", "").replace("中隊", "").replace("四大港桌", "四大港").replace("貴賓桌", "貴賓"); // 簡化顯示
-            el.setAttribute('data-name', tableName); // 存完整桌名方便搜尋
-            
-            // 根據桌名分配顏色樣式
-            if (tableName.includes("主桌") || tableName.includes("副團長")) {
-                el.classList.add('type-main');
-            } else if (tableName.includes("貴賓") || tableName.includes("顧問") || tableName.includes("親友") || tableName.includes("四大港")) {
-                el.classList.add('type-vip');
-            }
-
-            // 點擊事件
-            el.onclick = () => showModal(tableName);
-            
-            grid.appendChild(el);
-        });
-
-        // ==========================================
-        // 🔍 搜尋與互動功能
-        // ==========================================
-
-        const searchInput = document.getElementById('searchInput');
-
-        // 監聽輸入
-        searchInput.addEventListener('input', (e) => {
-            const val = e.target.value.trim().toLowerCase();
-            const tables = document.querySelectorAll('.table');
-            
-            // 清除所有亮起狀態
-            tables.forEach(t => t.classList.remove('highlight'));
-
-            if (!val) return;
-
-            // 尋找符合的人
-            const matchedTables = new Set();
-            rawData.forEach(p => {
-                if (p.n.toLowerCase().includes(val) || p.s.toLowerCase().includes(val)) {
-                    // 找到這個人的桌名，並對應到簡化後的 key
-                    let key = p.s.split('(')[0].trim();
-                    matchedTables.add(key);
-                }
+        // 綁定點擊事件
+        document.querySelectorAll('.table').forEach(el => {
+            el.addEventListener('click', function() {
+                const label = this.getAttribute('data-label');
+                // 模糊匹配：因為data-label和實際資料可能有些微差距
+                let targetKey = Object.keys(tableMap).find(k => label.includes(k) || k.includes(label.split(' ')[0]));
+                
+                // 特殊處理：第四大隊全部顯示
+                if (label.includes("第四大隊")) targetKey = "第四大隊 17-25";
+                
+                showModal(label, tableMap[targetKey] || ["目前無詳細名單"]);
             });
-
-            // 亮起對應的桌子
-            let firstMatch = null;
-            tables.forEach(t => {
-                if (matchedTables.has(t.getAttribute('data-name'))) {
-                    t.classList.add('highlight');
-                    if (!firstMatch) firstMatch = t;
-                }
-            });
-
-            // 捲動到第一個結果
-            if (firstMatch) {
-                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
         });
 
-        // ==========================================
-        // 🖼️ 彈出視窗控制
-        // ==========================================
-        const modal = document.getElementById('modalOverlay');
+        // 顯示彈窗
+        const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modalTitle');
-        const list = document.getElementById('guestList');
+        const modalContent = document.getElementById('modalContent');
 
-        function showModal(tableName) {
-            modalTitle.innerText = tableName;
-            list.innerHTML = ""; // 清空舊資料
-            
-            const guests = tablesData[tableName] || [];
-            
-            // 取得搜尋關鍵字，用來標記紅字
-            const keyword = searchInput.value.trim();
-
-            guests.forEach(name => {
-                const li = document.createElement('li');
-                li.className = 'guest-item';
-                
-                // 如果搜尋中，且名字符合，加強顯示
-                let displayName = name;
-                if (keyword && name.includes(keyword)) {
-                    displayName = `<span class="guest-highlight">${name}</span>`;
-                }
-                
-                li.innerHTML = `<span class="guest-name">${displayName}</span>`;
-                list.appendChild(li);
-            });
-
+        function showModal(title, names) {
+            modalTitle.innerText = title;
+            modalContent.innerHTML = names.map(n => `<div class="list-item"><b>${n}</b></div>`).join('');
             modal.style.display = 'flex';
         }
 
-        function closeModal(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        }
-        
-        function closeModalDirect() {
+        function closeModal() {
             modal.style.display = 'none';
         }
+
+        // 點擊背景關閉
+        modal.addEventListener('click', (e) => {
+            if(e.target === modal) closeModal();
+        });
+
+        // 搜尋功能
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const val = e.target.value.trim();
+            const tables = document.querySelectorAll('.table');
+            
+            // 清除亮起
+            tables.forEach(t => t.classList.remove('highlight'));
+
+            if(!val) return;
+
+            // 尋找符合的人名
+            let foundTables = new Set();
+            
+            // 1. 搜人名
+            rawData.forEach(p => {
+                if(p.n.includes(val)) {
+                   // 反查這個人在哪桌，然後找對應的HTML元素
+                   const key = p.s.split('(')[0].trim();
+                   tables.forEach(t => {
+                       if(t.getAttribute('data-label').includes(key)) {
+                           foundTables.add(t);
+                       }
+                   });
+                }
+            });
+
+            // 2. 搜桌名 (例如搜"主桌")
+            tables.forEach(t => {
+                if(t.innerText.includes(val)) foundTables.add(t);
+            });
+
+            // 亮起
+            if(foundTables.size > 0) {
+                foundTables.forEach(t => t.classList.add('highlight'));
+                // 捲動到第一個結果
+                const first = [...foundTables][0];
+                first.scrollIntoView({behavior: "smooth", block: "center"});
+            }
+        });
     </script>
 </body>
 </html>
