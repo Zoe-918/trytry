@@ -214,7 +214,7 @@
     <div class="zoom-controls">
         <button class="zoom-btn" onclick="zoomIn()">+</button>
         <button class="zoom-btn" onclick="zoomOut()">−</button>
-        <button class="zoom-btn fit-text" onclick="resetZoom()">最適</button>
+        <button class="zoom-btn fit-text" onclick="resetZoom()">1：1</button>
     </div>
 
     <div id="modal">
@@ -236,15 +236,15 @@
             // Row 2
             { id: '16', name: '親友桌', type: 't-guest', r: 2, c: 1, guests: ['孫倚文*2','楊壹善','孫倚琳','孫文川*3','劉懿慧','孫媽媽','趙宜庭','吳宏健'] },
             { id: '3',  name: '貴賓',   type: 't-vip',   r: 2, c: 2, guests: ['曾星明','黃公甫*2','沈明賢*3','王星皓','李文彬','張道銘'] },
-            { id: '4',  name: '副團長', type: 't-vip',   r: 2, c: 4, guests: ['林美秀','林曼莉*2','黃章一','陳德聰','杜俊慧','陳子健','林茂發'] },
+            { id: '4',  name: '副團長', type: 't-vip',   r: 2, c: 4, guests: ['林美秀','林曼莉*2','黃章一','陳德聰','杜俊慧','陳子健','林茂發','李奇峰'] },
             { id: '5',  name: '風電',   type: 't-vip',   r: 2, c: 5, guests: ['王志龍','洪瑞添','黃憲章','黃國誌','廖光政','林永晟','許鴻茗','喬永福','李武勳','王志文'] },
             { id: '13', name: '四港',   type: 't-org',   r: 2, c: 7, guests: ['基隆港*4','西碼頭分隊*2','臺中港警消*2','周朝祥'] },
             { id: '18', name: '第四',   type: 't-org',   r: 2, c: 8, guests: ['第四救災救護大隊'] },
             { id: '19', name: '清泉',   type: 't-org',   r: 2, c: 9, guests: ['清泉分隊'] },
             // Row 3
             { id: '17', name: '守望',   type: 't-org',   r: 3, c: 1, guests: ['大肚守望相助隊'] },
-            { id: '6',  name: '貴賓',   type: 't-vip',   r: 3, c: 2, guests: ['洪偉欽','許宥鈞','許博任','古崇序','賴景民','吳俊毅','蘇泓維','陳寓綸','余家均'] },
-            { id: '7',  name: '顧問',   type: 't-vip',   r: 3, c: 4, guests: ['張介堂','楊朝凱','劉純娟*2','蔡青榕','廖世義','施榮昌*2','李奇峰'] },
+            { id: '6',  name: '貴賓',   type: 't-vip',   r: 3, c: 2, guests: ['洪偉欽','許宥鈞','許博任','古崇序','賴景民','吳俊毅','蘇泓維','陳寓綸','陳建宏'] },
+            { id: '7',  name: '顧問',   type: 't-vip',   r: 3, c: 4, guests: ['張介堂','楊朝凱','劉純娟*2','蔡青榕','廖世義','施榮昌*2','余家均'] },
             { id: '8',  name: '顧問',   type: 't-vip',   r: 3, c: 5, guests: ['陳世昌','張家華','陳文宗','林暉智*2','游世雍','黃盛業*2','王詠建','陶明揚*2'] },
             { id: '14', name: '四港',   type: 't-org',   r: 3, c: 7, guests: ['基隆港*4','高雄港*2','臺中港警消*2','蔡賢廸','邦尼國際隨行人員'] },
             { id: '20', name: '大肚',   type: 't-org',   r: 3, c: 8, guests: ['大肚分隊'] },
